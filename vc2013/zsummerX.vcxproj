@@ -41,6 +41,9 @@
     <ClInclude Include="..\include\zsummerX\timer\timer.h" />
     <ClInclude Include="..\include\zsummerX\zsummerX.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{06D64BC9-7AD1-40A1-835A-54BCC3ABFE39}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

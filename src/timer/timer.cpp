@@ -49,13 +49,25 @@ Timer::~Timer()
 //get current time tick. unit is millisecond.
 unsigned long long Timer::getSteadyTick()
 {
-    return (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    return (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>
+		(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 //get current time tick. unit is millisecond.
 unsigned long long Timer::getSystemTick()
 {
-    return (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	//chrono是一个time library，源于boost，现在已经是C++标准
+	//std::chrono::duration_cast<目标时间周期>(时间周期)
+	//std::chrono::milliseconds 毫秒
+
+	//Clocks当前时钟
+	//std::chrono::system_clock //系统获取的时间
+	//std::chrono::steady_clock //不能被修改的时钟
+	//std::chrono::high_resolution_clock //高精度时钟，实际上是system_clock或者steady_clock的别名
+	//::now()来获取时间点
+
+    return (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>
+		(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 TimerID Timer::makeTimeID(bool useSystemTick, unsigned int delayTick)
@@ -70,7 +82,7 @@ TimerID Timer::makeTimeID(bool useSystemTick, unsigned int delayTick)
         tick = getSteadyTick() - _startSteadyTime;
     }
     tick += delayTick;
-    tick <<= SequenceBit;
+    tick <<= SequenceBit;//15
     tick |= (++_queSeq & SequenceMask);
     tick &= TimeSeqMask;
     if (useSystemTick)
@@ -81,6 +93,7 @@ TimerID Timer::makeTimeID(bool useSystemTick, unsigned int delayTick)
 }
 std::pair<bool, unsigned long long> Timer::resolveTimeID(TimerID timerID)
 {
+	//bool, unsigned long long
     return std::make_pair((timerID & UsedSysMask) != 0, (timerID & TimeSeqMask) >> SequenceBit);
 }
 using std::min;
@@ -105,11 +118,15 @@ TimerID Timer::createTimer(unsigned int delayTick, const _OnTimerHandler &handle
 }
 TimerID Timer::createTimer(unsigned int delayTick, _OnTimerHandler &&handle, bool useSysTime)
 {
-    _OnTimerHandler *pfunc = new _OnTimerHandler(std::move(handle));
+    _OnTimerHandler *pfunc = new _OnTimerHandler(std::move(handle));//std::move将左值转化为右值引用
     TimerID timerID = makeTimeID(useSysTime, delayTick);
     if (useSysTime)
     {
-        while (!_sysQue.insert(std::make_pair(timerID, pfunc)).second)
+		//std::map<TimerID, _OnTimerHandler* > _sysQue;
+		//pair< std::map<TimerID, _OnTimerHandler* >::iterator,bool> > p = _sysQue.insert(std::make_pair(timerID, pfunc))
+		//p->first 就是返回的map<string,int>::iterator迭代器
+		//p->first.first 就是TimerID类型数据
+        while (!_sysQue.insert(std::make_pair(timerID, pfunc)).second)//判断插入是否成功
         {
             timerID = makeTimeID(useSysTime, delayTick);
         }
@@ -149,12 +166,16 @@ bool Timer::cancelTimer(TimerID timerID)
     }
     return false;
 }
-
+//执行定时器
 void Timer::checkTimer()
 {
     if (!_steadyQue.empty())
     {
         unsigned long long now = getSteadyTick() - _startSteadyTime;
+		//std::map<TimerID, _OnTimerHandler* > _sysQue;
+		//_steadyQue.begin()->first 是 TimerID
+		//_steadyQue.begin()->second 是 _OnTimerHandler*
+		//resolveTimeID(_steadyQue.begin()->first).second
         while (!_steadyQue.empty() && now > resolveTimeID(_steadyQue.begin()->first).second)
         {
             TimerID timerID = _steadyQue.begin()->first;
@@ -164,7 +185,7 @@ void Timer::checkTimer()
             try
             {
                 //LCD("call timer(). now=" << (now >> ReserveBit)  << ", expire=" << (timerID >> ReserveBit));
-                (*handler)();
+                (*handler)();//执行定时器
             }
             catch (const std::exception & e)
             {

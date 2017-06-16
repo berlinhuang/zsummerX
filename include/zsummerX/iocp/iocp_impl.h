@@ -55,8 +55,9 @@ namespace zsummer
 
             bool initialize();
             void runOnce(bool isImmediately = false);
+			//&&handle 可以引用寄存器(右值)       //common.h using _OnTimerHandler = std::function<void()>;
             inline unsigned long long createTimer(unsigned int delayms, _OnTimerHandler &&handle, bool useSystemTime = true)
-            {
+            {	//std::move将左值转化为右值
                 return _timer.createTimer(delayms, std::move(handle), useSystemTime);
             }
             inline unsigned long long createTimer(unsigned int delayms, const _OnTimerHandler &handle, bool useSystemTime = true)

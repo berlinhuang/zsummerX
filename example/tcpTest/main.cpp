@@ -99,32 +99,33 @@ int main(int argc, char* argv[])
     if (argc > 1) g_remoteIP = argv[1];
     if (argc > 2) g_remotePort = atoi(argv[2]);
     if (argc > 3) g_startType = atoi(argv[3]);
-
-
     
-    if (g_startType == 0) ILog4zManager::getPtr()->config("server.cfg");
-    else ILog4zManager::getPtr()->config("client.cfg");
+    if (g_startType == 0) 
+		ILog4zManager::getPtr()->config("server.cfg");
+    else 
+		ILog4zManager::getPtr()->config("client.cfg");
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
 
     summer = std::shared_ptr<EventLoop>(new EventLoop);
     summer->initialize();
 
-    if (g_startType == 0)
+    if (g_startType == 0)//server端
     {
         accepter = std::shared_ptr<TcpAccept>(new TcpAccept());
         accepter->initialize(summer);
         ts = std::shared_ptr<TcpSocket>(new TcpSocket);
-        if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) return 0;
+        if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) 
+			return 0;
         accepter->doAccept(ts, std::bind(OnAcceptSocket, std::placeholders::_1, std::placeholders::_2));
     }
-    else
+    else//client
     {
         usedSocket = std::shared_ptr<TcpSocket>(new TcpSocket);
         usedSocket->initialize(summer);
         usedSocket->doConnect(g_remoteIP.c_str(), g_remotePort, std::bind(onConnect, std::placeholders::_1));
     }
-
+	//函数包装器 std::function<返回值（参数类型）> funcName = [](参数类型 参数)
     std::function<void()> moniter = [&moniter]()
     {
         cout << "echo=" << sendCount / 5 << endl;
@@ -133,12 +134,12 @@ int main(int argc, char* argv[])
     };
     summer->createTimer(5000, std::bind(moniter));
 
-    while (g_runing) summer->runOnce();
+    while (g_runing) 
+		summer->runOnce();
 
     ts.reset();
     accepter.reset();
     usedSocket.reset();
-
     return 0;
 }
 

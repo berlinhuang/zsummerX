@@ -79,8 +79,8 @@ namespace zsummer
             const unsigned long long _startSteadyTime = getSteadyTick();
 
             const unsigned long long   SequenceBit = 15;
-            const unsigned long long   SequenceMask = (unsigned long long)pow(2, SequenceBit) - 1;
-            const unsigned long long   TimeSeqMask = (unsigned long long)pow(2, 51) - 1;
+            const unsigned long long   SequenceMask = (unsigned long long)pow(2, SequenceBit) - 1;//32768-1
+            const unsigned long long   TimeSeqMask = (unsigned long long)pow(2, 51) - 1;//
             const unsigned long long   UsedSysMask = 1ULL << 51;
         };
     }
