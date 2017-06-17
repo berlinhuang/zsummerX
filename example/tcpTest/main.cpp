@@ -106,22 +106,23 @@ int main(int argc, char* argv[])
 		ILog4zManager::getPtr()->config("client.cfg");
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
-
+	//  using EventLoopPtr = std::shared_ptr<EventLoop>;
+	//  EventLoopPtr summer;
     summer = std::shared_ptr<EventLoop>(new EventLoop);
     summer->initialize();
 
     if (g_startType == 0)//server端
     {
-        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());
-        accepter->initialize(summer);
+        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());//初始化接收连接重叠结构
+        accepter->initialize(summer);//set eventloop线程summer
         ts = std::shared_ptr<TcpSocket>(new TcpSocket);
-        if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) 
+        if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) //监听套接字绑定完成端口
 			return 0;
-        accepter->doAccept(ts, std::bind(OnAcceptSocket, std::placeholders::_1, std::placeholders::_2));
+        accepter->doAccept(ts, std::bind(OnAcceptSocket, std::placeholders::_1, std::placeholders::_2));//投递接收连接请求
     }
     else//client
     {
-        usedSocket = std::shared_ptr<TcpSocket>(new TcpSocket);
+        usedSocket = std::shared_ptr<TcpSocket>(new TcpSocket);//初始化接收 发送 连接重叠结构
         usedSocket->initialize(summer);
         usedSocket->doConnect(g_remoteIP.c_str(), g_remotePort, std::bind(onConnect, std::placeholders::_1));
     }

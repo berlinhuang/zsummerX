@@ -98,9 +98,10 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
     }
     _ip = ip;
     _port = port;
-    _isIPV6 = _ip.find(':') != std::string::npos;
+	// （static const size_type npos = -1）
+    _isIPV6 = _ip.find(':') != std::string::npos;// _ip.find(":")找到，则_ip.find(':') != std::string::npos;为true
     if (_isIPV6)
-    {
+    {	//监听套接字
         _server = WSASocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
         setIPV6Only(_server, false);
     }
@@ -119,7 +120,13 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
     {
         setReuse(_server);
     }
-    
+    //struct sockaddr_in6
+	//sin6_family = AF_INET6
+	//sin6_port =  htons(port);
+	//sin6_flowinfo = 
+	//sin6_addr =
+	//
+
     if (_isIPV6)
     {
         SOCKADDR_IN6 addr;
@@ -131,7 +138,7 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         }
         else
         {
-            auto ret = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);
+            auto ret = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);//转为二进制 addr.sin6_addr
             if (ret <= 0)
             {
                 LCF("bind ipv6 error, ipv6 format error" << ip);
@@ -140,7 +147,7 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
                 return false;
             }
         }
-        addr.sin6_port = htons(port);
+        addr.sin6_port = htons(port);//主机字节序 转为网络字节序
         auto ret = bind(_server, (sockaddr *)&addr, sizeof(addr));
         if (ret != 0)
         {
@@ -155,7 +162,7 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         SOCKADDR_IN addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = ip.empty() ? INADDR_ANY : inet_addr(ip.c_str());
+        addr.sin_addr.s_addr = ip.empty() ? INADDR_ANY : inet_addr(ip.c_str());//转为二进制 addr.sin_addr.s_addr
         addr.sin_port = htons(port);
         if (bind(_server, (sockaddr *)&addr, sizeof(addr)) != 0)
         {
@@ -167,7 +174,6 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         
     }
 
-
     if (listen(_server, SOMAXCONN) != 0)
     {
         LCF("listen error, ERRCODE=" << WSAGetLastError() );
@@ -175,7 +181,7 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         _server = INVALID_SOCKET;
         return false;
     }
-
+	//绑定完成端口
     if (CreateIoCompletionPort((HANDLE)_server, _summer->_io, (ULONG_PTR)this, 1) == NULL)
     {
         LCF("bind to iocp error, ERRCODE=" << WSAGetLastError() );
@@ -211,7 +217,7 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
     }
     
     _client = s;
-    _socket = INVALID_SOCKET;
+    _socket = INVALID_SOCKET;//accept新连接的套接字
     memset(_recvBuf, 0, sizeof(_recvBuf));
     _recvLen = 0;
     unsigned int addrLen = 0;

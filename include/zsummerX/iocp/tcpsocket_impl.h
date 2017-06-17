@@ -42,6 +42,8 @@ namespace zsummer
 {
     namespace network
     {
+		//继承std::enable_shared_from_this 使得在该类中能够使用shared_ptr托管this指针
+		//类std::enable_shared_from_this 成员函数 shared_from_this()返回指向自身的shared_ptr指针
         class TcpSocket : public std::enable_shared_from_this<TcpSocket>
         {
         public:
