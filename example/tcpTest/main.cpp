@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
     {
         cout << "echo=" << sendCount / 5 << endl;
         sendCount = 0;
-        summer->createTimer(5000, std::bind(moniter));
+        summer->createTimer(5000, std::bind(moniter));//定时器5s
     };
     summer->createTimer(5000, std::bind(moniter));
 
