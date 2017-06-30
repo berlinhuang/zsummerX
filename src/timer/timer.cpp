@@ -51,6 +51,7 @@ unsigned long long Timer::getSteadyTick()
 {
     return (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>
 		(std::chrono::steady_clock::now().time_since_epoch()).count();
+	//time_since_epoch()用来获得1970年1月1日到time_point时间经过的duration
 }
 
 //get current time tick. unit is millisecond.
@@ -82,9 +83,11 @@ TimerID Timer::makeTimeID(bool useSystemTick, unsigned int delayTick)
         tick = getSteadyTick() - _startSteadyTime;
     }
     tick += delayTick;
+	//LCD(tick);//定时点
     tick <<= SequenceBit;//15
-    tick |= (++_queSeq & SequenceMask);
+    tick |= (++_queSeq & SequenceMask);//tick |=(++0&SequenceMask)
     tick &= TimeSeqMask;
+	//LCD(((tick & TimeSeqMask) >> SequenceBit));//回推定时点
     if (useSystemTick)
     {
         tick |= UsedSysMask;
@@ -93,6 +96,7 @@ TimerID Timer::makeTimeID(bool useSystemTick, unsigned int delayTick)
 }
 std::pair<bool, unsigned long long> Timer::resolveTimeID(TimerID timerID)
 {
+	//回推定时点
 	//bool, unsigned long long
     return std::make_pair((timerID & UsedSysMask) != 0, (timerID & TimeSeqMask) >> SequenceBit);
 }
@@ -123,9 +127,11 @@ TimerID Timer::createTimer(unsigned int delayTick, _OnTimerHandler &&handle, boo
     if (useSysTime)
     {
 		//std::map<TimerID, _OnTimerHandler* > _sysQue;
+		// map 操作insert()返回值是 pair<iterator,bool>, bool表示是否插入成功
 		//pair< std::map<TimerID, _OnTimerHandler* >::iterator,bool> > p = _sysQue.insert(std::make_pair(timerID, pfunc))
 		//p->first 就是返回的map<string,int>::iterator迭代器
 		//p->first.first 就是TimerID类型数据
+		//map插入<key, value>会按照key小到大的大小排序进行存储
         while (!_sysQue.insert(std::make_pair(timerID, pfunc)).second)//判断插入是否成功
         {
             timerID = makeTimeID(useSysTime, delayTick);
@@ -172,11 +178,11 @@ void Timer::checkTimer()
     if (!_steadyQue.empty())
     {
         unsigned long long now = getSteadyTick() - _startSteadyTime;
-		//std::map<TimerID, _OnTimerHandler* > _sysQue;
-		//_steadyQue.begin()->first 是 TimerID
+		//std::map<TimerID, _OnTimerHandler* > _steadyQue;
+		//_steadyQue.begin()->first  是 TimerID
 		//_steadyQue.begin()->second 是 _OnTimerHandler*
 		//resolveTimeID(_steadyQue.begin()->first).second
-        while (!_steadyQue.empty() && now > resolveTimeID(_steadyQue.begin()->first).second)
+        while (!_steadyQue.empty() && now > resolveTimeID(_steadyQue.begin()->first).second)//超时了拿过来执行，执行完删除
         {
             TimerID timerID = _steadyQue.begin()->first;
             _OnTimerHandler * handler = _steadyQue.begin()->second;

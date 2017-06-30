@@ -85,11 +85,13 @@ void OnAcceptSocket(NetErrorCode ec, TcpSocketPtr s);
 
 int main(int argc, char* argv[])
 {
-    signal(SIGINT, signalFun);
+    signal(SIGINT, signalFun);//注册键盘ctrl + c的中断执行函数
+	//signal(SIGINT, SIG_DFL);//默认信号处理程序
+	//signal(SIGINT, SIG_IGN);//忽略信号处理程序
     if (argc == 2 && 
         (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "/?") == 0))
     {
-        cout << "please input like example:" << endl;
+        cout << "Example:" << endl;
         cout << "tcpTest remoteIP remotePort startType" << endl;
         cout << "./tcpTest 0.0.0.0 8081 0" << endl;
         cout << "startType: 0 server, 1 client" << endl;
@@ -101,9 +103,10 @@ int main(int argc, char* argv[])
     if (argc > 3) g_startType = atoi(argv[3]);
     
     if (g_startType == 0) 
-		ILog4zManager::getPtr()->config("server.cfg");
+		//ILog4zManager::getPtr()->config("E:\\github\\zsummerX\\example\\bin\\server.cfg");
+		ILog4zManager::getPtr()->config(".\\..\\bin\\server.cfg");
     else 
-		ILog4zManager::getPtr()->config("client.cfg");
+		ILog4zManager::getPtr()->config(".\\..\\bin\\client.cfg");
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
 	//  using EventLoopPtr = std::shared_ptr<EventLoop>;
@@ -126,14 +129,14 @@ int main(int argc, char* argv[])
         usedSocket->initialize(summer);
         usedSocket->doConnect(g_remoteIP.c_str(), g_remotePort, std::bind(onConnect, std::placeholders::_1));
     }
-	//函数包装器 std::function<返回值（参数类型）> funcName = [](参数类型 参数)
+	//函数包装器 std::function<返回值（参数类型）> funcName = [捕获外部变量](参数类型 参数)
     std::function<void()> moniter = [&moniter]()
     {
         cout << "echo=" << sendCount / 5 << endl;
         sendCount = 0;
         summer->createTimer(5000, std::bind(moniter));//定时器5s
     };
-    summer->createTimer(5000, std::bind(moniter));
+    summer->createTimer(5000, std::bind(moniter));//开始定时
 
     while (g_runing) 
 		summer->runOnce();

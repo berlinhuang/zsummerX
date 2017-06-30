@@ -1,2 +1,116 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ClassDiagram /> 
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="zsummer::network::ZSummerEnvironment" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAIAAAEAgCgAAAxQAAAAAAAAQAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\common\common.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="zsummer::network::Timer">
+    <Position X="7" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>DAAAAAAQAAAAIAAAAAEKQAAAJAAIAAiAAAAAAGGGAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\timer\timer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="zsummer::network::TcpSession" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gEgCANTQYQwoQBAAhAAICiRAAgAAJxBYiJCCgACAMoE=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\session.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="zsummer::network::SessionManager" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAwCCACEAIARgCALSCAgAjAAghhosAMAACEQEEQA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="zsummer::network::ExtendHandle" Collapsed="true">
+    <Position X="2.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAQAAABABAAAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\iocp\common_impl.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="zsummer::network::SessionBlock" Collapsed="true">
+    <Position X="4" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAACAAAAQAgABAAAAAAQCIAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="zsummer::network::SessionOptions" Collapsed="true">
+    <Position X="0.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAABAAIJAABQACAICAgAAAAAAiIIQCAAAAAAQAQ=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="zsummer::network::AccepterOptions" Collapsed="true">
+    <Position X="0.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAABAABACAAQAAAAAAAAAAAAAQAAAUAgEAAAAgAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="ConnectEx" Collapsed="true">
+    <Position X="0.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\src\iocp\tcpsocket_impl.cpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="zsummer::network::NetErrorCode" Collapsed="true">
+    <Position X="4" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\common\common.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::LINK_STATUS" Collapsed="true">
+    <Position X="2.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAACAAEAAAAAAAAAAAAAAAAhAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\common\common.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::POST_COM_KEY" Collapsed="true">
+    <Position X="0.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\iocp\common_impl.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::ProtoType" Collapsed="true">
+    <Position X="2.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::BLOCK_CHECK_TYPE" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAIAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::StatType" Collapsed="true">
+    <Position X="4" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAIAAAAAAAEAAAAAAABABCAAAAAAAAYCAAgAAAAhgI=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="zsummer::network::TupleParamType" Collapsed="true">
+    <Position X="0.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAAAAAAACAAAAAAAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>E:\github\zsummerX\include\zsummerX\frame\config.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="微软雅黑" Size="9" />
+</ClassDiagram>
