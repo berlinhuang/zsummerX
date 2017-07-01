@@ -1,4 +1,4 @@
-/*
+﻿/*
  * proto4z License
  * -----------
  * 
@@ -127,7 +127,7 @@ static void printPackError(lua_State * L, const char *tp, const char * desc)
 {
     char buf[200] = { 0 };
     lua_getglobal(L, "print");
-    sprintf(buf, "pack warning. the value is nil when pack [%s].[%s]. it's will replace by default value.", desc, tp);
+    sprintf_s(buf,sizeof(buf), "pack warning. the value is nil when pack [%s].[%s]. it's will replace by default value.", desc, tp);
     lua_pushstring(L, buf);
     lua_pcall(L, 1, 0, 0);
 }
@@ -201,7 +201,7 @@ static int pack(lua_State * L)
                 {
                     long long v = 0;
 #ifdef WIN32  
-                    sscanf(str, "%I64d", &v);
+                    sscanf_s(str, "%I64d", &v);
 #else
                     sscanf(str, "%lld", &v);
 #endif
@@ -216,7 +216,7 @@ static int pack(lua_State * L)
                 {
                     unsigned long long v = 0;
 #ifdef WIN32  
-                    sscanf(str, "%I64u", &v);
+                    sscanf_s(str, "%I64u", &v);
 #else
                     sscanf(str, "%llu", &v);
 #endif
@@ -271,7 +271,7 @@ static void printUnpackError(lua_State * L, size_t pos, size_t dataLen, const ch
 {
     char buf[200] = { 0 };
     lua_getglobal(L, "print");
-    sprintf(buf, "unpack error. the current pos is invalid. cur pos=%u, type=%s, blockSize=%u", (unsigned int)pos, tp, (unsigned int)dataLen);
+	sprintf_s(buf, sizeof(buf), "unpack error. the current pos is invalid. cur pos=%u, type=%s, blockSize=%u", (unsigned int)pos, tp, (unsigned int)dataLen);
     lua_pushstring(L, buf);
     lua_pcall(L, 1, 0, 0);
 }
@@ -398,7 +398,7 @@ static int unpack(lua_State * L)
             if (strcmp(tp, "i64") == 0)
             {
 #ifdef WIN32  
-                sprintf(buf, "%I64d", (long long)v);
+				sprintf_s(buf, sizeof(buf), "%I64d", (long long)v);
 #else
                 sprintf(buf, "%lld", (long long)v);
 #endif
@@ -406,7 +406,7 @@ static int unpack(lua_State * L)
             else
             {
 #ifdef WIN32  
-                sprintf(buf, "%I64u", v);
+				sprintf_s(buf, sizeof(buf), "%I64u", v);
 #else
                 sprintf(buf, "%llu", v);
 #endif
