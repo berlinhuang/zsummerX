@@ -44,7 +44,6 @@ TcpAccept::TcpAccept()
     //listen
     memset(&_handle._overlapped, 0, sizeof(_handle._overlapped));
     _server = INVALID_SOCKET;
-    
     _handle._type = ExtendHandle::HANDLE_ACCEPT;
 
     //client
@@ -131,23 +130,24 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
     {
         SOCKADDR_IN6 addr;
         memset(&addr, 0, sizeof(addr));
-        addr.sin6_family = AF_INET6;
+        addr.sin6_family = AF_INET6;//1.
         if (ip.empty() || ip == "::")
         {
             addr.sin6_addr = in6addr_any;
         }
         else
         {
-            auto ret = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);//转为二进制 addr.sin6_addr
+			//pton presentation表达式，numeric数值
+            auto ret = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);//2.转为二进制 保存在addr.sin6_addr
             if (ret <= 0)
             {
-                LCF("bind ipv6 error, ipv6 format error" << ip);
+                LCF("bind ipv6 error, ipv6 format error" << ip);//LOG_FATAL
                 closesocket(_server);
                 _server = INVALID_SOCKET;
                 return false;
             }
         }
-        addr.sin6_port = htons(port);//主机字节序 转为网络字节序
+        addr.sin6_port = htons(port);//3.主机字节序 转为网络字节序
         auto ret = bind(_server, (sockaddr *)&addr, sizeof(addr));
         if (ret != 0)
         {
@@ -237,6 +237,7 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
         return false;
     }
     setNoDelay(_socket);
+	//          监听socket 连接socket 缓冲区  
     if (!AcceptEx(_server, _socket, _recvBuf, 0, addrLen, addrLen, &_recvLen, &_handle._overlapped))
     {
         if (WSAGetLastError() != ERROR_IO_PENDING)
@@ -257,7 +258,7 @@ bool TcpAccept::onIOCPMessage(BOOL bSuccess)
     _OnAcceptHandler onAccept(std::move(_onAcceptHandler));
     if (bSuccess)
     {
-
+		//把listen套结字一些属性（包括socket内部接受/发送缓存大小等等）拷贝到新建立的套结字，却可以使后续的shutdown调用成功
         if (setsockopt(_socket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, (char*)&_server, sizeof(_server)) != 0)
         {
             LCW("setsockopt SO_UPDATE_ACCEPT_CONTEXT fail!  last error=" << WSAGetLastError() );
@@ -281,8 +282,11 @@ bool TcpAccept::onIOCPMessage(BOOL bSuccess)
             int tmp1 = 0;
             int tmp2 = 0;
             GetAcceptExSockaddrs(_recvBuf, _recvLen, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &paddr1, &tmp1, &paddr2, &tmp2);
+			LCI(inet_ntoa(((sockaddr_in*)paddr2)->sin_addr));//远程地址
+			LCI(ntohs(((sockaddr_in*)paddr2)->sin_port));//远程端口
+			//设置属性
             _client->attachSocket(_socket, inet_ntoa(((sockaddr_in*)paddr2)->sin_addr), ntohs(((sockaddr_in*)paddr2)->sin_port), _isIPV6);
-            onAccept(NEC_SUCCESS, _client);
+            onAccept(NEC_SUCCESS, _client);//OnAcceptSocket( NetErrorCode ec, TcpSocketPtr s )
         }
 
     }

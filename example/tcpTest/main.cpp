@@ -110,15 +110,16 @@ int main(int argc, char* argv[])
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
 	//  using EventLoopPtr = std::shared_ptr<EventLoop>;
-	//  EventLoopPtr summer;
+	//  EventLoopPtr summer;//std::shared_ptr<EventLoop> summer  //指向EventLoop空指针
     summer = std::shared_ptr<EventLoop>(new EventLoop);
-    summer->initialize();
+    summer->initialize();// _io = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
 
     if (g_startType == 0)//server端
     {
-        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());//初始化接收连接重叠结构
-        accepter->initialize(summer);//set eventloop线程summer
-        ts = std::shared_ptr<TcpSocket>(new TcpSocket);
+        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());//初始化接收连接重叠结构 accept
+        accepter->initialize(summer);// _summer = summer;    set eventloop线程summer 
+        ts = std::shared_ptr<TcpSocket>(new TcpSocket);//初始化接收连接重叠结构 send recv connect
+
         if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) //监听套接字绑定完成端口
 			return 0;
         accepter->doAccept(ts, std::bind(OnAcceptSocket, std::placeholders::_1, std::placeholders::_2));//投递接收连接请求
@@ -192,7 +193,8 @@ void OnAcceptSocket(NetErrorCode ec, TcpSocketPtr s)
         return;
     }
     usedSocket = s;
-    usedSocket->initialize(summer);
+    usedSocket->initialize(summer);//连接套接字绑定完成端口
+	//投递接收连接的请求
     usedSocket->doRecv(recvBuffer, recvBufferLen, std::bind(OnSocketRecv, std::placeholders::_1, std::placeholders::_2));
 };
 
