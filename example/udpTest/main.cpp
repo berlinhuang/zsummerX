@@ -47,13 +47,15 @@ using namespace zsummer::proto4z;
 //! 消息包缓冲区大小
 #define _MSG_BUF_LEN    (1200)
 std::string g_fillString;
+std::string g_c2s = "client";
+std::string g_s2c = "server";
 #define NOW_TIME (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
 unsigned short g_type;
 //! 消息包 
 struct Picnic
 {
     char           recvData[_MSG_BUF_LEN];
-    UdpSocketPtr sock;
+    UdpSocketPtr sock;//        using UdpSocketPtr = std::shared_ptr<UdpSocket>;
 };
 using PicnicPtr = std::shared_ptr<Picnic>;
 
@@ -70,9 +72,18 @@ void onRecv(NetErrorCode ec, const char *remoteIP, unsigned short remotePort, in
         LOGE ("onRecv Error, EC=" << ec );
         return;
     }
+	//sendto 目标ip 目标port
+    //pic->sock->doSendTo(pic->recvData, translate, remoteIP, remotePort);
+	if (remotePort == 88)//server
+	{
+		pic->sock->doSendTo((char *)g_s2c.c_str(), (unsigned int)g_s2c.length(), remoteIP, remotePort);//server
+	}
+	else
+	{
+		pic->sock->doSendTo((char *)g_c2s.c_str(), (unsigned int)g_c2s.length(), remoteIP, remotePort);//client
+	}
 
-    pic->sock->doSendTo(pic->recvData, translate, remoteIP, remotePort);
-
+	//投递接收
     pic->sock->doRecvFrom(pic->recvData, _MSG_BUF_LEN, std::bind(onRecv,
         std::placeholders::_1,
         std::placeholders::_2,
@@ -82,7 +93,6 @@ void onRecv(NetErrorCode ec, const char *remoteIP, unsigned short remotePort, in
     g_totalEcho++;
     g_totalRecv++;
     g_totalSend++;
-    
 }
 
 int main(int argc, char* argv[])
@@ -113,31 +123,61 @@ int main(int argc, char* argv[])
     unsigned int maxClient = atoi(argv[4]);
     if (g_type ==1)
     {
-        zsummer::log4z::ILog4zManager::getPtr()->config("server.cfg");
+        zsummer::log4z::ILog4zManager::getPtr()->config(".\\..\\bin\\client.cfg");
         zsummer::log4z::ILog4zManager::getPtr()->start();
     }
     else
     {
-        zsummer::log4z::ILog4zManager::getPtr()->config("client.cfg");
+        zsummer::log4z::ILog4zManager::getPtr()->config(".\\..\\bin\\server.cfg");
         zsummer::log4z::ILog4zManager::getPtr()->start();
     }
     LOGI("ip=" << ip << ", port=" << port << ", type=" << g_type << ", maxClients=" << maxClient);
     
     zsummer::network::EventLoopPtr summer(new zsummer::network::EventLoop());
-    summer->initialize();
+    summer->initialize();//创建完成端口_io
 
-    g_fillString.resize(200, 'z');
+    g_fillString.resize(200, 'z');//初始化200个z
+
     g_totalEcho = 0;
     g_totalEchoTime = 0;
     g_totalSend = 0;
     g_totalRecv = 0;
 
     
-    if (g_type == 0)
+    if (g_type == 0)//server
     {
         PicnicPtr pic(new Picnic());
+		memset(&pic->recvData, 0, sizeof(pic->recvData));
         pic->sock = std::make_shared<UdpSocket>();
+		//创建socket
+		//绑定地址
+		//绑定完成端口
         pic->sock->initialize(summer, ip.c_str(), port);
+		//
+		/*
+		struct ExtendHandle 
+		{
+			OVERLAPPED     _overlapped;
+			unsigned char _type;
+			std::shared_ptr<TcpSocket> _tcpSocket;
+			std::shared_ptr<TcpAccept> _tcpAccept;
+			std::shared_ptr<UdpSocket> _udpSocket;
+			enum HANDLE_TYPE
+			{
+				HANDLE_ACCEPT,
+				HANDLE_RECV,
+				HANDLE_SEND,
+				HANDLE_CONNECT,
+				HANDLE_RECVFROM,
+				HANDLE_SENDTO,
+			};
+		};
+		*/
+		// ExtendHandle _recvHandle;
+		//_recvHandle._overlapped  //WSARecvFrom() 传入
+		//_recvHandle._udpSocket = shared_from_this();
+		//_recvHandle._type = ExtendHandle::HANDLE_RECVFROM;
+		//投递WSARecvFrom
         pic->sock->doRecvFrom(pic->recvData, _MSG_BUF_LEN, std::bind(onRecv,
             std::placeholders::_1,
             std::placeholders::_2,
@@ -151,19 +191,25 @@ int main(int argc, char* argv[])
         for (unsigned int i = 0; i < maxClient; i++)
         {
             PicnicPtr pic(new Picnic);
+			memset(&pic->recvData, 0, sizeof(pic->recvData));
             pic->sock = std::make_shared<UdpSocket>();
+			//client
             if (!pic->sock->initialize(summer, "0.0.0.0", 0))
             {
                 LOGI("init udp socket error.");
                 continue;
             }
+			//
             pic->sock->doRecvFrom(pic->recvData, _MSG_BUF_LEN, std::bind(onRecv,
                 std::placeholders::_1,
                 std::placeholders::_2,
                 std::placeholders::_3,
                 std::placeholders::_4,
                 pic));
-            pic->sock->doSendTo((char *)g_fillString.c_str(), (unsigned int)g_fillString.length(), ip.c_str(), port);
+			//客户端先发送
+            //pic->sock->doSendTo((char *)g_fillString.c_str(), (unsigned int)g_fillString.length(), ip.c_str(), port);
+			pic->sock->doSendTo((char *)g_c2s.c_str(), (unsigned int)g_c2s.length(), ip.c_str(), port);
+
         }
 
     }
@@ -171,7 +217,7 @@ int main(int argc, char* argv[])
     
     //定时检测
     unsigned long long nLast[3] = {0};
-
+	//测试每秒的效率
     std::function<void()> doTimer = [&nLast, &doTimer, &summer]()
     {
         LOGI("EchoSpeed[" << (g_totalEcho - nLast[0])/5.0

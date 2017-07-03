@@ -96,12 +96,13 @@ bool UdpSocket::initialize(const EventLoopPtr &summer, const char *localIP, unsi
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(localIP);
     addr.sin_port = htons(localPort);
+
     if (bind(_socket, (sockaddr *) &addr, sizeof(sockaddr_in)) != 0)
     {
         LCE("bind local addr error!  socket=" << (unsigned int)_socket << ", ERRCODE=" << WSAGetLastError());
         return false;
     }
-    
+    //
     if (CreateIoCompletionPort((HANDLE)_socket, _summer->_io, (ULONG_PTR)this, 1) == NULL)
     {
         LCE("socket to IOCP error. socket="<< (unsigned int) _socket << ", ERRCODE=" << GetLastError());
@@ -199,11 +200,13 @@ bool UdpSocket::onIOCPMessage(BOOL bSuccess, DWORD dwTranceBytes, unsigned char 
     {
         std::shared_ptr<UdpSocket> guad(std::move(_recvHandle._udpSocket));
         _OnRecvFromHandler onRecv(std::move(_onRecvHander));
+		//LOGI(_recvWSABuf.buf);
         _recvWSABuf.buf = nullptr;
         _recvWSABuf.len = 0;
         
         if (bSuccess && dwTranceBytes > 0)
         {
+			//void onRecv(NetErrorCode ec, const char *remoteIP, unsigned short remotePort, int translate, PicnicPtr pic)
             onRecv(NEC_SUCCESS, inet_ntoa(_recvFrom.sin_addr), ntohs(_recvFrom.sin_port), dwTranceBytes);
         }
         else
