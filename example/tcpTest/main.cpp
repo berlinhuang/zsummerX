@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 	//函数包装器 std::function<返回值（参数类型）> funcName = [捕获外部变量](参数类型 参数)
     std::function<void()> moniter = [&moniter]()
     {
-        cout << "echo=" << sendCount / 5 << endl;
+        cout << "echo=" << sendCount / 5 << endl;//每秒发送几次
         sendCount = 0;
         summer->createTimer(5000, std::bind(moniter));//定时器5s
     };
@@ -148,13 +148,11 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-
-
-
 void OnSocketSend(NetErrorCode ec, int recvLength)
 {
     if (ec) return;
-    if (recvLength != sendBufferLen) LOGW("safe warning, need translate remaining data.");
+    if (recvLength != sendBufferLen) 
+		LOGW("safe warning, need translate remaining data.");
 };
 
 void OnSocketRecv(NetErrorCode ec, int recvLength)
@@ -162,8 +160,10 @@ void OnSocketRecv(NetErrorCode ec, int recvLength)
     if (ec != NEC_SUCCESS) return;
     memcpy(sendBuffer, recvBuffer, recvLength);
     sendBufferLen = recvLength;
+	//投递WSASend
     bool ret = usedSocket->doSend(sendBuffer, sendBufferLen, std::bind(OnSocketSend, std::placeholders::_1, std::placeholders::_2));// safe-warning: can't call this method again when last doSend request not return. 
     if (!ret)  return;
+	//投递WSARecv
     ret = usedSocket->doRecv(recvBuffer, recvBufferLen, std::bind(OnSocketRecv, std::placeholders::_1, std::placeholders::_2));
     if (!ret)  return;
     sendCount++;
