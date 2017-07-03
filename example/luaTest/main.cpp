@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
     luaL_openlibs(L);  /* open libraries */
     lua_newtable(L);
     lua_setglobal(L, "Proto4z");
-    luaopen_summer(L);
-    luaopen_proto4z_util(L);
+    luaopen_summer(L);//注册 summer命名空间的函数
+    luaopen_proto4z_util(L);// 注册proto4z_util命名空间的函数
     lua_gc(L, LUA_GCRESTART, 0);
 
     luaopen_performence(L);

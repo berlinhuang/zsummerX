@@ -3,6 +3,19 @@ package.path =  "../../depends/proto4z/?.lua;" .. package.path
 require("proto4z")
 require("TestProto")
 
+local tb = 
+{
+    _G.Proto4z,
+    _G.summer,
+    _G.Proto4zUtil,
+}
+
+for i,j in pairs(tb) do
+    print("________________________")
+    for k,v in pairs(j) do
+        print(k,v)
+    end
+end
 
 
 local lastTime = os.time()
