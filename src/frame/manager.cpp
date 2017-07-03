@@ -134,6 +134,7 @@ AccepterOptions & SessionManager::getAccepterOptions(AccepterID aID)
 
 bool SessionManager::openAccepter(AccepterID aID)
 {
+	//std::unordered_map<AccepterID, AccepterOptions > _mapAccepterOptions;
     auto founder = _mapAccepterOptions.find(aID);
     if (founder == _mapAccepterOptions.end())
     {
@@ -150,7 +151,6 @@ bool SessionManager::openAccepter(AccepterID aID)
     {
         LCW("openAccepter warning. no listen IP. default use 0.0.0.0");
     }
-    
     TcpAcceptPtr accepter = std::make_shared<TcpAccept>();
     if (!accepter->initialize(_summer))
     {

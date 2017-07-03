@@ -305,19 +305,25 @@ static int addListen(lua_State *L)
 {
     AccepterID aID = SessionManager::getRef().addAccepter(luaL_checkstring(L, 1), (unsigned short)luaL_checkinteger(L, 2));
     auto &extend = SessionManager::getRef().getAccepterOptions(aID);
+
     extend._sessionOptions._rc4TcpEncryption = luaL_optstring(L, 3, extend._sessionOptions._rc4TcpEncryption.c_str());
     extend._maxSessions = (unsigned int)luaL_optinteger(L, 4, extend._maxSessions);
     extend._sessionOptions._sessionPulseInterval = (unsigned int)luaL_optinteger(L, 5, extend._sessionOptions._sessionPulseInterval);
     extend._sessionOptions._protoType = (unsigned int)luaL_optinteger(L, 6, 0) == 0 ? PT_TCP : PT_HTTP;
-    extend._sessionOptions._onSessionLinked = std::bind(_onSessionLinked, L, std::placeholders::_1);
-    extend._sessionOptions._onBlockDispatch = std::bind(_onMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    extend._sessionOptions._onHTTPBlockDispatch = std::bind(_onWebMessage, L, std::placeholders::_1, std::placeholders::_2,
-                                            std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
-    extend._sessionOptions._onSessionClosed = std::bind(_onSessionClosed, L, std::placeholders::_1);
-    extend._sessionOptions._onSessionPulse = std::bind(_onSessionPulse, L, std::placeholders::_1);
+
+    extend._sessionOptions._onSessionLinked = std::bind(
+		_onSessionLinked, L, std::placeholders::_1);
+    extend._sessionOptions._onBlockDispatch = std::bind(
+		_onMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    extend._sessionOptions._onHTTPBlockDispatch = std::bind(
+		_onWebMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+    extend._sessionOptions._onSessionClosed = std::bind(
+		_onSessionClosed, L, std::placeholders::_1);
+    extend._sessionOptions._onSessionPulse = std::bind(
+		_onSessionPulse, L, std::placeholders::_1);
 
     LOGD("lua: addListen:" << extend);
-
+	//openAccept doAccept 
     if (!SessionManager::getRef().openAccepter(aID))
     {
         return 0;

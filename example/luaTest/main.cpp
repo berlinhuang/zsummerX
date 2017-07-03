@@ -51,7 +51,11 @@ using namespace zsummer::network;
 void sigFun(int sig)
 {
     SessionManager::getRef().stop();
-    SessionManager::getRef().post(std::bind([](){SessionManager::getRef().kickClientSession(); SessionManager::getRef().kickConnect(); }));
+    SessionManager::getRef().post(
+		std::bind(
+		[](){
+		SessionManager::getRef().kickClientSession(); 
+		SessionManager::getRef().kickConnect(); }));
 }
 
 static int pcall_error(lua_State *L)
@@ -78,10 +82,7 @@ int safedofile(lua_State * L, const char * file)
     int status = luaL_loadfile(L, file) || lua_pcall(L, 0, 0, index + 1);
     lua_remove(L, index + 1);
     return status;
-
 }
-
-
 
 
 
@@ -130,22 +131,22 @@ int main(int argc, char* argv[])
     {
         if(strcmp(argv[2], "server") == 0)
         {
-            status = safedofile(L, "./tcpserver.lua");
+            status = safedofile(L, ".\\..\\bin\\tcpserver.lua");
         }
         else
         {
-            status = safedofile(L, "./tcpclient.lua");
+            status = safedofile(L, ".\\..\\bin\\tcpclient.lua");
         }
     }
     else
     {
         if(strcmp(argv[2], "server") == 0)
         {
-            status = safedofile(L, "./webserver.lua");
+            status = safedofile(L, ".\\..\\bin\\webserver.lua");
         }
         else
         {
-            status = safedofile(L, "./webclient.lua");
+            status = safedofile(L, ".\\..\\bin\\webclient.lua");
         }
     }
     
