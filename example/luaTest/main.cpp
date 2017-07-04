@@ -119,6 +119,8 @@ int main(int argc, char* argv[])
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
     luaL_openlibs(L);  /* open libraries */
     lua_newtable(L);
+	//lua_pushstring 把c字符串压入栈顶
+	//lua_setglobal 把栈顶的数据传到Lua环境中作为全局变量    _G.Proto4z = c字符串
     lua_setglobal(L, "Proto4z");
     luaopen_summer(L);//注册 summer命名空间的函数
     luaopen_proto4z_util(L);// 注册proto4z_util命名空间的函数

@@ -41,17 +41,38 @@ static void hook_run_fn(lua_State *L, lua_Debug *ar);
 
 static int newindex(lua_State * L)
 {
-    lua_pushvalue(L, 1);
-    lua_pushvalue(L, 2);
-    lua_pushvalue(L, 3);
-    lua_rawset(L, 4);
-    lua_pop(L, 1);
-    const char * key = luaL_checkstring(L, 2);
-    const char * v = luaL_typename(L, 3);
+	lua_pushvalue(L, 1);//t 把栈上给定索引处的元素作一个副本压栈
+    lua_pushvalue(L, 2);//k	
+    lua_pushvalue(L, 3);//v
+
+	//int lo = lua_gettop(L); //此处应该是6
+	/*
+		6,v
+		5,k
+		4,t
+		3,v
+		2,k
+		1,t
+	*/
+    lua_rawset(L, 4);//t        t[k] = v  
+	//const char *ty = luaL_typename(L, 4); //类型是个table
+	//int lo = lua_gettop(L); //此处应该是4
+	/*
+		4, table吧
+		3, v
+		2, k
+		1, t
+	*/
+    lua_pop(L, 1);//从栈中弹出 1 个元素
+    const char * key = luaL_checkstring(L, 2);//第 2 个参数是否是一个 字符串并返回这个字符串
+	const char * v = luaL_checkstring(L, 3);//第 3 个参数是否是一个 字符串并返回这个字符串
+    const char * vt = luaL_typename(L, 3);//返回给定索引处值的类型名
     std::stringstream ss;
-    ss << "catch one operation that it's set a global value. key=" << key << ", type(v)=" << v << ", is it correct ?";
+    ss << "catch one operation that it's set a global value. key=" << key << ", type(v)=" << vt << ", is it correct ?";
+	//将表summer压栈，返回该压入值的类型                返回summer["logw"]类型  是否为function
     if (lua_getglobal(L, "summer") == LUA_TTABLE && lua_getfield(L, -1, "logw") == LUA_TFUNCTION)
     {
+		//ss.str().c_str();的值"catch one operation that it's set a global value. key=sdf, type(v)=string, is it correct ?"
         lua_pushstring(L, ss.str().c_str());
         lua_pcall(L, 1, 0, 0);
     }
@@ -72,11 +93,13 @@ void luaopen_performence(lua_State * L)
     //lua_Hook oldhook = lua_gethook(L);
     //int oldmask = lua_gethookmask(L);
     lua_sethook(L, &hook_run_fn, LUA_MASKCALL | LUA_MASKRET, 0);
-    lua_getglobal(L, "_G");
-    lua_newtable(L);
+    lua_getglobal(L, "_G");//将表_G压栈，返回该压入值的类型
+    lua_newtable(L);//创建一个表格t放到栈顶
     lua_pushcclosure(L, newindex, 0);
-    lua_setfield(L, -2, "__newindex");
-    lua_setmetatable(L, -2);
+    lua_setfield(L, -2, "__newindex");//t = { __newindex = newindex }
+    lua_setmetatable(L, -2);//把一个table弹出堆栈，并将其设为给定索引处的值的metatable  _G.metatable = { __newindex = newindex }
+	//设置了_G.metatable = { __newindex = newindex } 作用
+	// lua脚本给全局变量table _G赋值时，会被__newindex捕捉到
 }
 
 void hook_run_fn(lua_State *L, lua_Debug *ar)

@@ -594,22 +594,22 @@ static luaL_Reg summer[] = {
     { NULL, NULL }
 };
 
+//向lua中注册C++函数 其他方式：
+/*
+void lua_register (lua_State *L, const char *name, lua_CFunction f);
+把 C 函数 f 设到全局变量 name 中。 它通过一个宏定义：
+#define lua_register(L,n,f)        (lua_pushcfunction(L, f), lua_setglobal(L, n))
+*/
+
 //luaopen_库名()       一般lua中requre "xxx"   xxx与库名对应
 int luaopen_summer(lua_State *L)
 {
-    lua_newtable(L);
+    lua_newtable(L);//创建一个表格t放到栈顶
     for (luaL_Reg *l = summer; l->name != NULL; l++) {  
-		//向lua中注册C++函数
-		//
-		/*
-		void lua_register (lua_State *L, const char *name, lua_CFunction f);
-		把 C 函数 f 设到全局变量 name 中。 它通过一个宏定义：
-		#define lua_register(L,n,f)        (lua_pushcfunction(L, f), lua_setglobal(L, n))
-		*/
 		//lua_push*族函数都有"创建一个类型的值并压入"的语意
 		//lua_pushcclosure(L, c函数指针, 函数关联的upvalue的个数)
         lua_pushcclosure(L, l->func, 0);  /* closure with those upvalues */
-        lua_setfield(L, -2, l->name);// Proto4z[-2][l->name]= l->func
+        lua_setfield(L, -2, l->name);// lua_setfield( L, 索引, 字符串键 )    索引到t    t[l->name]= l->func   并把l->func出栈
     }
     lua_setglobal(L, "summer");
     return 0;

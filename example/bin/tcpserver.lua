@@ -1,5 +1,10 @@
 package.path =  "../../depends/proto4z/?.lua;" .. package.path
 --require
+print("---test-Proto4z-begin--------------------------")
+for k,v in pairs(_G.Proto4z) do 
+    print(k,v)
+end
+print("---test-Proto4z-end--------------------------")
 require("proto4z")
 require("TestProto")
 
@@ -9,13 +14,23 @@ local tb =
     _G.summer,
     _G.Proto4zUtil,
 }
-
+print("---test-begin--------------------------")
 for i,j in pairs(tb) do
     print("________________________")
     for k,v in pairs(j) do
         print(k,v)
     end
 end
+print("---test-end--------------------------")
+
+
+print("---test-metatable begin--------------------------")
+_G["keytest"] = "sssss"
+print(_G["keytest"])
+for k,v in pairs(getmetatable(_G)) do
+    print(k,v)
+end
+print("---test-metatable end--------------------------")
 
 
 local lastTime = os.time()
