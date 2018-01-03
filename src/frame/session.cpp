@@ -141,6 +141,7 @@ bool TcpSession::attatch(const TcpSocketPtr &sockptr, AccepterID aID, SessionID 
     {
         try
         {
+			//回调连接成功 whenLinked _onSessionLinked
             _options._onSessionLinked(shared_from_this());
         }
         catch (const std::exception & e)
@@ -184,6 +185,7 @@ void TcpSession::onConnected(zsummer::network::NetErrorCode ec)
     {
         try
         {
+			//回调whenLinked _onSessionLinked
             _options._onSessionLinked(shared_from_this());
         }
         catch (const std::exception & e)
@@ -224,6 +226,7 @@ void TcpSession::close()
         if (_status == 2)
         {
             SessionManager::getRef()._statInfo[STAT_SESSION_CLOSED]++;
+			//回调 whenClosed _onSessionClosed
             if (_options._onSessionClosed)
             {
                 SessionManager::getRef().post(std::bind(_options._onSessionClosed, shared_from_this()));
@@ -351,6 +354,7 @@ void TcpSession::onRecv(zsummer::network::NetErrorCode ec, int received)
             try
             {
                 SessionManager::getRef()._statInfo[STAT_RECV_PACKS]++;
+				//回调whenMessage => _onMessage
                 _options._onBlockDispatch(shared_from_this(), _recving->begin + usedIndex, ret.second);
             }
             catch (const std::exception & e)
@@ -417,6 +421,7 @@ void TcpSession::onRecv(zsummer::network::NetErrorCode ec, int received)
             SessionManager::getRef()._statInfo[STAT_RECV_PACKS]++;
             try
             {
+				//回调whenWebMessage _onWebMessage 
                 _options._onHTTPBlockDispatch(shared_from_this(), _httpMethod, _httpMethodLine, _httpHeader, body);
 
             }
@@ -631,6 +636,7 @@ void TcpSession::onPulse()
         {
             try
             {
+				//回调whenPulse _onSessionPulse 
                 _options._onSessionPulse(shared_from_this());
             }
             catch (const std::exception & e)

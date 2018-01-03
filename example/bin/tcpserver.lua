@@ -1,8 +1,36 @@
 package.path =  "../../depends/proto4z/?.lua;" .. package.path
 --require
+print("---test-Proto4z-begin--------------------------")
+for k,v in pairs(_G.Proto4z) do 
+    print(k,v)
+end
+print("---test-Proto4z-end--------------------------")
 require("proto4z")
 require("TestProto")
 
+local tb = 
+{
+    _G.Proto4z,
+    _G.summer,
+    _G.Proto4zUtil,
+}
+print("---test-begin--------------------------")
+for i,j in pairs(tb) do
+    print("________________________")
+    for k,v in pairs(j) do
+        print(k,v)
+    end
+end
+print("---test-end--------------------------")
+
+
+print("---test-metatable begin--------------------------")
+_G["keytest"] = "sssss"
+print(_G["keytest"])
+for k,v in pairs(getmetatable(_G)) do
+    print(k,v)
+end
+print("---test-metatable end--------------------------")
 
 
 local lastTime = os.time()
@@ -61,6 +89,7 @@ local startTick = summer.now()
 --如果嵌入其他程序 例如cocos2dx, 可以吧runOnce设置true然后放入update中.
 --while summer.runOnce(true) do
 while summer.runOnce() and summer.now() - startTick < 10*1000 do
+     startTick = summer.now()
 end
 
 

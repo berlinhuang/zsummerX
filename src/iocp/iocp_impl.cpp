@@ -112,7 +112,16 @@ void EventLoop::runOnce(bool isImmediately)
         return;
     }
     
-    //! net data
+    //! net data 收到的数据全部在这边
+	/*
+		_overlapped
+		_type
+		_tcpSocket
+		_tcpAccept
+		_udpSocket
+		  _recvWSABuf
+		  ....
+	*/
     ExtendHandle & req = *(HandlerFromOverlaped(pOverlapped));
     switch (req._type)
     {

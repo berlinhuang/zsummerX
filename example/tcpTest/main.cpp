@@ -85,11 +85,13 @@ void OnAcceptSocket(NetErrorCode ec, TcpSocketPtr s);
 
 int main(int argc, char* argv[])
 {
-    signal(SIGINT, signalFun);
+    signal(SIGINT, signalFun);//注册键盘ctrl + c的中断执行函数
+	//signal(SIGINT, SIG_DFL);//默认信号处理程序
+	//signal(SIGINT, SIG_IGN);//忽略信号处理程序
     if (argc == 2 && 
         (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "/?") == 0))
     {
-        cout << "please input like example:" << endl;
+        cout << "Example:" << endl;
         cout << "tcpTest remoteIP remotePort startType" << endl;
         cout << "./tcpTest 0.0.0.0 8081 0" << endl;
         cout << "startType: 0 server, 1 client" << endl;
@@ -101,21 +103,23 @@ int main(int argc, char* argv[])
     if (argc > 3) g_startType = atoi(argv[3]);
     
     if (g_startType == 0) 
-		ILog4zManager::getPtr()->config("server.cfg");
+		//ILog4zManager::getPtr()->config("E:\\github\\zsummerX\\example\\bin\\server.cfg");
+		ILog4zManager::getPtr()->config(".\\..\\bin\\server.cfg");
     else 
-		ILog4zManager::getPtr()->config("client.cfg");
+		ILog4zManager::getPtr()->config(".\\..\\bin\\client.cfg");
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
 	//  using EventLoopPtr = std::shared_ptr<EventLoop>;
-	//  EventLoopPtr summer;
+	//  EventLoopPtr summer;//std::shared_ptr<EventLoop> summer  //指向EventLoop空指针
     summer = std::shared_ptr<EventLoop>(new EventLoop);
-    summer->initialize();
+    summer->initialize();// _io = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
 
     if (g_startType == 0)//server端
     {
-        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());//初始化接收连接重叠结构
-        accepter->initialize(summer);//set eventloop线程summer
-        ts = std::shared_ptr<TcpSocket>(new TcpSocket);
+        accepter = std::shared_ptr<TcpAccept>(new TcpAccept());//初始化接收连接重叠结构 accept
+        accepter->initialize(summer);// _summer = summer;    set eventloop线程summer 
+        ts = std::shared_ptr<TcpSocket>(new TcpSocket);//初始化接收连接重叠结构 send recv connect
+
         if (!accepter->openAccept(g_remoteIP.c_str(), g_remotePort)) //监听套接字绑定完成端口
 			return 0;
         accepter->doAccept(ts, std::bind(OnAcceptSocket, std::placeholders::_1, std::placeholders::_2));//投递接收连接请求
@@ -126,14 +130,14 @@ int main(int argc, char* argv[])
         usedSocket->initialize(summer);
         usedSocket->doConnect(g_remoteIP.c_str(), g_remotePort, std::bind(onConnect, std::placeholders::_1));
     }
-	//函数包装器 std::function<返回值（参数类型）> funcName = [](参数类型 参数)
+	//函数包装器 std::function<返回值（参数类型）> funcName = [捕获外部变量](参数类型 参数)
     std::function<void()> moniter = [&moniter]()
     {
-        cout << "echo=" << sendCount / 5 << endl;
+        cout << "echo=" << sendCount / 5 << endl;//每秒发送几次
         sendCount = 0;
-        summer->createTimer(5000, std::bind(moniter));
+        summer->createTimer(5000, std::bind(moniter));//定时器5s
     };
-    summer->createTimer(5000, std::bind(moniter));
+    summer->createTimer(5000, std::bind(moniter));//开始定时
 
     while (g_runing) 
 		summer->runOnce();
@@ -144,13 +148,11 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-
-
-
 void OnSocketSend(NetErrorCode ec, int recvLength)
 {
     if (ec) return;
-    if (recvLength != sendBufferLen) LOGW("safe warning, need translate remaining data.");
+    if (recvLength != sendBufferLen) 
+		LOGW("safe warning, need translate remaining data.");
 };
 
 void OnSocketRecv(NetErrorCode ec, int recvLength)
@@ -158,8 +160,10 @@ void OnSocketRecv(NetErrorCode ec, int recvLength)
     if (ec != NEC_SUCCESS) return;
     memcpy(sendBuffer, recvBuffer, recvLength);
     sendBufferLen = recvLength;
+	//投递WSASend
     bool ret = usedSocket->doSend(sendBuffer, sendBufferLen, std::bind(OnSocketSend, std::placeholders::_1, std::placeholders::_2));// safe-warning: can't call this method again when last doSend request not return. 
     if (!ret)  return;
+	//投递WSARecv
     ret = usedSocket->doRecv(recvBuffer, recvBufferLen, std::bind(OnSocketRecv, std::placeholders::_1, std::placeholders::_2));
     if (!ret)  return;
     sendCount++;
@@ -189,7 +193,8 @@ void OnAcceptSocket(NetErrorCode ec, TcpSocketPtr s)
         return;
     }
     usedSocket = s;
-    usedSocket->initialize(summer);
+    usedSocket->initialize(summer);//连接套接字绑定完成端口
+	//投递接收连接的请求
     usedSocket->doRecv(recvBuffer, recvBufferLen, std::bind(OnSocketRecv, std::placeholders::_1, std::placeholders::_2));
 };
 

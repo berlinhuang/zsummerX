@@ -305,19 +305,25 @@ static int addListen(lua_State *L)
 {
     AccepterID aID = SessionManager::getRef().addAccepter(luaL_checkstring(L, 1), (unsigned short)luaL_checkinteger(L, 2));
     auto &extend = SessionManager::getRef().getAccepterOptions(aID);
+
     extend._sessionOptions._rc4TcpEncryption = luaL_optstring(L, 3, extend._sessionOptions._rc4TcpEncryption.c_str());
     extend._maxSessions = (unsigned int)luaL_optinteger(L, 4, extend._maxSessions);
     extend._sessionOptions._sessionPulseInterval = (unsigned int)luaL_optinteger(L, 5, extend._sessionOptions._sessionPulseInterval);
     extend._sessionOptions._protoType = (unsigned int)luaL_optinteger(L, 6, 0) == 0 ? PT_TCP : PT_HTTP;
-    extend._sessionOptions._onSessionLinked = std::bind(_onSessionLinked, L, std::placeholders::_1);
-    extend._sessionOptions._onBlockDispatch = std::bind(_onMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    extend._sessionOptions._onHTTPBlockDispatch = std::bind(_onWebMessage, L, std::placeholders::_1, std::placeholders::_2,
-                                            std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
-    extend._sessionOptions._onSessionClosed = std::bind(_onSessionClosed, L, std::placeholders::_1);
-    extend._sessionOptions._onSessionPulse = std::bind(_onSessionPulse, L, std::placeholders::_1);
+
+    extend._sessionOptions._onSessionLinked = std::bind(
+		_onSessionLinked, L, std::placeholders::_1);
+    extend._sessionOptions._onBlockDispatch = std::bind(
+		_onMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    extend._sessionOptions._onHTTPBlockDispatch = std::bind(
+		_onWebMessage, L, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+    extend._sessionOptions._onSessionClosed = std::bind(
+		_onSessionClosed, L, std::placeholders::_1);
+    extend._sessionOptions._onSessionPulse = std::bind(
+		_onSessionPulse, L, std::placeholders::_1);
 
     LOGD("lua: addListen:" << extend);
-
+	//openAccept doAccept 
     if (!SessionManager::getRef().openAccepter(aID))
     {
         return 0;
@@ -553,7 +559,8 @@ static int _steadyTime(lua_State * L)
     return 1;
 }
 
-
+//{  name,  func  }
+//{ 字符串， c函数指针 }
 static luaL_Reg summer[] = {
     { "logd", logd },
     { "logi", logi },
@@ -587,13 +594,22 @@ static luaL_Reg summer[] = {
     { NULL, NULL }
 };
 
+//向lua中注册C++函数 其他方式：
+/*
+void lua_register (lua_State *L, const char *name, lua_CFunction f);
+把 C 函数 f 设到全局变量 name 中。 它通过一个宏定义：
+#define lua_register(L,n,f)        (lua_pushcfunction(L, f), lua_setglobal(L, n))
+*/
 
+//luaopen_库名()       一般lua中requre "xxx"   xxx与库名对应
 int luaopen_summer(lua_State *L)
 {
-    lua_newtable(L);
+    lua_newtable(L);//创建一个表格t放到栈顶
     for (luaL_Reg *l = summer; l->name != NULL; l++) {  
+		//lua_push*族函数都有"创建一个类型的值并压入"的语意
+		//lua_pushcclosure(L, c函数指针, 函数关联的upvalue的个数)
         lua_pushcclosure(L, l->func, 0);  /* closure with those upvalues */
-        lua_setfield(L, -2, l->name);
+        lua_setfield(L, -2, l->name);// lua_setfield( L, 索引, 字符串键 )    索引到t    t[l->name]= l->func   并把l->func出栈
     }
     lua_setglobal(L, "summer");
     return 0;
