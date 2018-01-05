@@ -82,11 +82,18 @@ void EventLoop::runOnce(bool isImmediately)
     DWORD dwTranceBytes = 0;
     ULONG_PTR uComKey = NULL;
     LPOVERLAPPED pOverlapped = NULL;
-
-    BOOL bRet = GetQueuedCompletionStatus(_io, &dwTranceBytes, &uComKey, &pOverlapped, isImmediately ? 0 : _timer.getNextExpireTime()/*INFINITE*/);
-
+	//iocp
+	//dwTranceBytes:一次完成后的I/O操作所传送数据的字节数
+	//uComKey: 完成键 传递的数据被称为 单句柄数据 数据应该是与每个socket句柄对应
+	//pOverlapped: 重叠结构体 传递的数据被称为 单IO数据 数据应该与每次的操作WSARecv、WSASend等相对应
+	//用于指定调用者等待CP的时间
+	BOOL bRet = GetQueuedCompletionStatus(_io, &dwTranceBytes, &uComKey, &pOverlapped, isImmediately ? 0 : _timer.getNextExpireTime()/*INFINITE*/);
+	// LOGI(_timer.getNextExpireTime());
+	
+	//检查定时器超时状态
     _timer.checkTimer();
-    if (!bRet && !pOverlapped)
+    
+	if (!bRet && !pOverlapped)
     {
         //TIMEOUT
         return;
@@ -122,10 +129,11 @@ void EventLoop::runOnce(bool isImmediately)
 		  _recvWSABuf
 		  ....
 	*/
+	//! 处理来自网络的通知
     ExtendHandle & req = *(HandlerFromOverlaped(pOverlapped));
     switch (req._type)
     {
-    case ExtendHandle::HANDLE_ACCEPT:
+	case ExtendHandle::HANDLE_ACCEPT://接收连接
         {
             if (req._tcpAccept)
             {
@@ -133,9 +141,9 @@ void EventLoop::runOnce(bool isImmediately)
             }
         }
         break;
-    case ExtendHandle::HANDLE_RECV:
-    case ExtendHandle::HANDLE_SEND:
-    case ExtendHandle::HANDLE_CONNECT:
+    case ExtendHandle::HANDLE_RECV://接收
+    case ExtendHandle::HANDLE_SEND://发送
+    case ExtendHandle::HANDLE_CONNECT://连接
         {
             if (req._tcpSocket)
             {

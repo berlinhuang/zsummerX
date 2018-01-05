@@ -58,7 +58,9 @@ void CSchedule::start()
     for (int i=0; i< 1; i++)
     {
         CProcess * p = new CProcess();//CProcess._summer = shared_ptr<EventLoop>( new EventLoop)
-        if (p->start()) //启动一个线程 CProcess._thread = std::thread t(std::bind(&CProcess::run, this));
+		//启动一个工作线程 CProcess._thread = std::thread t(std::bind(&CProcess::run, this));
+		//该线程会阻塞在_summer->runOnce()的GetQueuedCompletionStatus()中
+		if (p->start()) 
         {
             _process.push_back(p);//工作线程池
         }
@@ -74,7 +76,7 @@ void CSchedule::start()
         TcpSocketPtr s(new zsummer::network::TcpSocket());
         
 		// http://bbs.csdn.net/topics/391902417
-		// 投递一个AcceptEx请求到 listenfd （_server）上
+		// 投递一个AcceptEx异步连接请求到 listenfd （_server）上
 		// AcceptEx(_server, _socket, _recvBuf, 0, addrLen, addrLen, &_recvLen, &_handle._overlapped)
         _accept->doAccept(s, std::bind(&CSchedule::OnAccept, this, std::placeholders::_1, std::placeholders::_2));
     }

@@ -229,6 +229,12 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
     else
     {
         addrLen = sizeof(SOCKADDR_IN)+16;
+		//为即将到来的连接县创建好套接字
+		//阻塞式连接中accept的返回值即为新进连接的socket
+		
+		//异步连接需要事先将socket备下，再行连接 
+		//下面的WSASocket()就是Windows专用，支持异步操作 
+		//而socket()返回的套接字是用于同步传输
         _socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
     }
     if (_socket == INVALID_SOCKET)
@@ -237,7 +243,13 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
         return false;
     }
     setNoDelay(_socket);
-	//          监听socket 连接socket 缓冲区  
+	//// 在监听套接字_server上投递异步连接请求
+	//_server: 监听socket 
+	//_socket: 即将到来连接socket 
+	//_recvBuf: 接收缓冲区 对等端发来的数据，server地址，client地址
+	//0: 表只连接不接收
+	//addrLen: 本地地址长度至少sizeof(sockaddr_in)+16
+	//addrLen: 远端地址长度， 
     if (!AcceptEx(_server, _socket, _recvBuf, 0, addrLen, addrLen, &_recvLen, &_handle._overlapped))
     {
         if (WSAGetLastError() != ERROR_IO_PENDING)
