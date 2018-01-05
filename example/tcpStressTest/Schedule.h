@@ -58,13 +58,13 @@ public:
 
     //! IOServer池
     std::vector<CProcess *> _process;
-    int                        _iCurProcess = 0;
+    int _iCurProcess = 0;
 
 
     zsummer::network::EventLoopPtr _summer;
     std::thread     _thread;
     zsummer::network::TcpAcceptPtr _accept;
-    bool    _running = false;
+    bool _running = false;
 
 };
 

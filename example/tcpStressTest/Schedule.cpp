@@ -57,30 +57,33 @@ void CSchedule::start()
 
     for (int i=0; i< 1; i++)
     {
-        CProcess * p = new CProcess();
-        if (p->start())
+        CProcess * p = new CProcess();//CProcess._summer = shared_ptr<EventLoop>( new EventLoop)
+        if (p->start()) //启动一个线程 CProcess._thread = std::thread t(std::bind(&CProcess::run, this));
         {
-            _process.push_back(p);
+            _process.push_back(p);//工作线程池
         }
     }
     
-    if (g_startType == 0)
+    if (g_startType == 0) //listen
     {
+		//listenfd(_accept->_server) 绑定到 IOCP(_accept->_summer->_io)
         if (_accept->openAccept(g_remoteIP.c_str(), g_remotePort))
         {
             LOGI("open server port [" << g_remotePort << "] success");
         }
         TcpSocketPtr s(new zsummer::network::TcpSocket());
         
+		// http://bbs.csdn.net/topics/391902417
+		// 投递一个AcceptEx请求到 listenfd （_server）上
+		// AcceptEx(_server, _socket, _recvBuf, 0, addrLen, addrLen, &_recvLen, &_handle._overlapped)
         _accept->doAccept(s, std::bind(&CSchedule::OnAccept, this, std::placeholders::_1, std::placeholders::_2));
     }
-    else
+    else //connect
     {
         doConnect(g_maxClient);
     }
 
-
-    _thread = std::thread(std::bind(&CSchedule::run, this));
+    _thread = std::thread(std::bind(&CSchedule::run, this));//IO线程
 }
 void CSchedule::stop()
 {
