@@ -143,7 +143,10 @@ void CSchedule::OnAccept(zsummer::network::NetErrorCode ec, TcpSocketPtr sockptr
         _iCurProcess++;
         _iCurProcess = _iCurProcess % (int)_process.size();
         CProcess * process = _process[_iCurProcess];
-        sockptr->initialize(process->GetZSummer());
+		//新连接加入到IOCP
+        sockptr->initialize(process->GetZSummer()); 
+		//PostQueuedCompletionStatus( CProcess::RecvSocketPtr );
+		//CProcess::RecvSocketPtr()会处理投递WSARec
         process->post(std::bind(&CProcess::RecvSocketPtr, process, sockptr));
     }
 

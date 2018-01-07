@@ -269,7 +269,7 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
 bool TcpAccept::onIOCPMessage(BOOL bSuccess)
 {
     std::shared_ptr<TcpAccept> guad( std::move(_handle._tcpAccept));
-    _OnAcceptHandler onAccept(std::move(_onAcceptHandler));
+    _OnAcceptHandler onAccept(std::move(_onAcceptHandler));//CSchedule::start() 调用 doAccept将CSchedule::onAccept()注册到_onAcceptHandler
     if (bSuccess)
     {
 		//把listen套结字一些属性（包括socket内部接受/发送缓存大小等等）拷贝到新建立的套结字，却可以使后续的shutdown调用成功
@@ -298,9 +298,9 @@ bool TcpAccept::onIOCPMessage(BOOL bSuccess)
             GetAcceptExSockaddrs(_recvBuf, _recvLen, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &paddr1, &tmp1, &paddr2, &tmp2);
 			LCI(inet_ntoa(((sockaddr_in*)paddr2)->sin_addr));//远程地址
 			LCI(ntohs(((sockaddr_in*)paddr2)->sin_port));//远程端口
-			//设置属性
+			//_client 执行TcpSocket( 保存了客户端的信息 管理客户端用的）
             _client->attachSocket(_socket, inet_ntoa(((sockaddr_in*)paddr2)->sin_addr), ntohs(((sockaddr_in*)paddr2)->sin_port), _isIPV6);
-            onAccept(NEC_SUCCESS, _client);//OnAcceptSocket( NetErrorCode ec, TcpSocketPtr s )
+            onAccept(NEC_SUCCESS, _client);//OnAcceptSocket( NetErrorCode ec, TcpSocketPtr s )   //CSchedule::OnAccept 初始化新连接 加入iocp等
         }
 
     }

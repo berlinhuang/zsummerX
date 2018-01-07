@@ -46,11 +46,11 @@ namespace zsummer
         class TcpAccept : public std::enable_shared_from_this<TcpAccept>
         {
         public:
-            TcpAccept();
+            TcpAccept();//_handle._overlapped进行memset   _handle._type初始化为HANDLE_ACCEPT
             ~TcpAccept();
-            bool initialize(EventLoopPtr& summer);
-            bool openAccept(const std::string ip, unsigned short port, bool reuse = true);
-            bool doAccept(const TcpSocketPtr& s, _OnAcceptHandler &&handler);
+            bool initialize(EventLoopPtr& summer);//_summer初始指向EventLoop，是一个loop
+            bool openAccept(const std::string ip, unsigned short port, bool reuse = true);//listenfd (  WSASocket, bind， listen， 绑定IOCP)
+            bool doAccept(const TcpSocketPtr& s, _OnAcceptHandler &&handler); //投递AcceptEx请求到listenfd， 注册了连接到来的处理函数handler(CSchedule::OnAccept)
             bool onIOCPMessage(BOOL bSuccess);
             bool close();
         private:
