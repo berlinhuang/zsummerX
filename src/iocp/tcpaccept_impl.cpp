@@ -181,6 +181,8 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         _server = INVALID_SOCKET;
         return false;
     }
+	//将一个设备与一个IOCP关联起来（windows核心这本书的讲法，_server是一个设备句柄， 设备句柄包括（文件，套接字，邮件槽，管道等））
+	//创建IOCP内核对象的时候就会 创建一个【设备列表】数据结构，现在将一个设备加入到里面
 	//绑定完成端口
     if (CreateIoCompletionPort((HANDLE)_server, _summer->_io, (ULONG_PTR)this, 1) == NULL)
     {
@@ -229,7 +231,7 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
     else
     {
         addrLen = sizeof(SOCKADDR_IN)+16;
-		//为即将到来的连接县创建好套接字
+		//为即将到来的连接先创建好套接字
 		//阻塞式连接中accept的返回值即为新进连接的socket
 		
 		//异步连接需要事先将socket备下，再行连接 
