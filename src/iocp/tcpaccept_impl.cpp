@@ -181,6 +181,8 @@ bool TcpAccept::openAccept(const std::string ip, unsigned short port , bool reus
         _server = INVALID_SOCKET;
         return false;
     }
+	//将一个设备与一个IOCP关联起来（windows核心这本书的讲法，_server是一个设备句柄， 设备句柄包括（文件，套接字，邮件槽，管道等））
+	//创建IOCP内核对象的时候就会 创建一个【设备列表】数据结构，现在将一个设备加入到里面
 	//绑定完成端口
     if (CreateIoCompletionPort((HANDLE)_server, _summer->_io, (ULONG_PTR)this, 1) == NULL)
     {
@@ -229,6 +231,12 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
     else
     {
         addrLen = sizeof(SOCKADDR_IN)+16;
+		//为即将到来的连接先创建好套接字
+		//阻塞式连接中accept的返回值即为新进连接的socket
+		
+		//异步连接需要事先将socket备下，再行连接 
+		//下面的WSASocket()就是Windows专用，支持异步操作 
+		//而socket()返回的套接字是用于同步传输
         _socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
     }
     if (_socket == INVALID_SOCKET)
@@ -237,7 +245,13 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
         return false;
     }
     setNoDelay(_socket);
-	//          监听socket 连接socket 缓冲区  
+	//// 在监听套接字_server上投递异步连接请求
+	//_server: 监听socket 
+	//_socket: 即将到来连接socket 
+	//_recvBuf: 接收缓冲区 对等端发来的数据，server地址，client地址
+	//0: 表只连接不接收
+	//addrLen: 本地地址长度至少sizeof(sockaddr_in)+16
+	//addrLen: 远端地址长度， 
     if (!AcceptEx(_server, _socket, _recvBuf, 0, addrLen, addrLen, &_recvLen, &_handle._overlapped))
     {
         if (WSAGetLastError() != ERROR_IO_PENDING)
@@ -255,7 +269,7 @@ bool TcpAccept::doAccept(const TcpSocketPtr & s, _OnAcceptHandler&& handler)
 bool TcpAccept::onIOCPMessage(BOOL bSuccess)
 {
     std::shared_ptr<TcpAccept> guad( std::move(_handle._tcpAccept));
-    _OnAcceptHandler onAccept(std::move(_onAcceptHandler));
+    _OnAcceptHandler onAccept(std::move(_onAcceptHandler));//CSchedule::start() 调用 doAccept将CSchedule::onAccept()注册到_onAcceptHandler
     if (bSuccess)
     {
 		//把listen套结字一些属性（包括socket内部接受/发送缓存大小等等）拷贝到新建立的套结字，却可以使后续的shutdown调用成功
@@ -284,9 +298,9 @@ bool TcpAccept::onIOCPMessage(BOOL bSuccess)
             GetAcceptExSockaddrs(_recvBuf, _recvLen, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &paddr1, &tmp1, &paddr2, &tmp2);
 			LCI(inet_ntoa(((sockaddr_in*)paddr2)->sin_addr));//远程地址
 			LCI(ntohs(((sockaddr_in*)paddr2)->sin_port));//远程端口
-			//设置属性
+			//_client 执行TcpSocket( 保存了客户端的信息 管理客户端用的）
             _client->attachSocket(_socket, inet_ntoa(((sockaddr_in*)paddr2)->sin_addr), ntohs(((sockaddr_in*)paddr2)->sin_port), _isIPV6);
-            onAccept(NEC_SUCCESS, _client);//OnAcceptSocket( NetErrorCode ec, TcpSocketPtr s )
+            onAccept(NEC_SUCCESS, _client);//OnAcceptSocket( NetErrorCode ec, TcpSocketPtr s )   //CSchedule::OnAccept 初始化新连接 加入iocp等
         }
 
     }

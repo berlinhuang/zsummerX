@@ -57,11 +57,11 @@ unsigned short g_remotePort = 8081;
 unsigned short g_startType = 0;  //0 listen, 1 connect
 bool g_runing = true;
 
-EventLoopPtr summer; //ioserver
-TcpAcceptPtr accepter; //accept
-TcpSocketPtr ts;//socket need create before accept.
+EventLoopPtr summer; //ioserver				//std::shared_ptr<EventLoop> summer 
+TcpAcceptPtr accepter; //accept				//std::share_ptr<TcpAcceptor> accpter
 
-TcpSocketPtr usedSocket;// established socket from accept or connect.
+TcpSocketPtr ts;//socket need create before accept.		//std::share_ptr<TcpSocket> ts
+TcpSocketPtr usedSocket;// established socket from accept or connect.       
 
 
 char recvBuffer[1024]; //recv buffer
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     ILog4zManager::getPtr()->start();
     LOGI("g_remoteIP=" << g_remoteIP << ", g_remotePort=" << g_remotePort << ", g_startType=" << g_startType );
 	//  using EventLoopPtr = std::shared_ptr<EventLoop>;
-	//  EventLoopPtr summer;//std::shared_ptr<EventLoop> summer  //指向EventLoop空指针
+	//  EventLoopPtr summer; //指向EventLoop空指针
     summer = std::shared_ptr<EventLoop>(new EventLoop);
     summer->initialize();// _io = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
 
